@@ -8,15 +8,29 @@ import numpy as np
 from .extraction import FIELDS, gold_to_target, score
 
 
+def clopper_pearson(k, n, alpha=0.05):
+    """Exact binomial interval for k successes in n trials (valid at k = 0 and k = n, where the bootstrap degenerates)."""
+    from scipy.stats import beta
+    lo = 0.0 if k == 0 else float(beta.ppf(alpha / 2, k, n - k + 1))
+    hi = 1.0 if k == n else float(beta.ppf(1 - alpha / 2, k + 1, n - k))
+    return lo, hi
+
+
 def bootstrap_ci(values, n_boot=2000, seed=0, alpha=0.05):
-    """Mean and percentile bootstrap interval of a 0/1 (or float) vector."""
+    """Mean and percentile bootstrap interval of a 0/1 (or float) vector. For 0/1 vectors the exact Clopper-Pearson interval is
+    added (cp_lo, cp_hi, k) and is the one to quote when the count is 0 or n."""
     v = np.asarray(values, dtype=float)
     if len(v) == 0:
         return {"n": 0, "mean": None, "lo": None, "hi": None}
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(v), size=(n_boot, len(v)))
     means = v[idx].mean(axis=1)
-    return {"n": len(v), "mean": float(v.mean()), "lo": float(np.quantile(means, alpha / 2)), "hi": float(np.quantile(means, 1 - alpha / 2))}
+    out = {"n": len(v), "mean": float(v.mean()), "lo": float(np.quantile(means, alpha / 2)), "hi": float(np.quantile(means, 1 - alpha / 2))}
+    if set(np.unique(v)) <= {0.0, 1.0}:
+        k = int(v.sum())
+        out["k"] = k
+        out["cp_lo"], out["cp_hi"] = clopper_pearson(k, len(v), alpha)
+    return out
 
 
 def load_jsonl(path):

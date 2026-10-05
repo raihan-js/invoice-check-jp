@@ -45,3 +45,15 @@ def test_slices_and_ci_are_sane():
 def test_bootstrap_is_seeded_and_empty_safe():
     assert bootstrap_ci([1, 0, 1, 1]) == bootstrap_ci([1, 0, 1, 1])
     assert bootstrap_ci([])["mean"] is None
+
+
+def test_clopper_pearson_handles_zero_and_full_counts():
+    from invoicecheck.evaluation import clopper_pearson
+    lo, hi = clopper_pearson(0, 292)
+    assert lo == 0.0 and 0.009 < hi < 0.014                 # about 3/n, the rule of three
+    lo, hi = clopper_pearson(292, 292)
+    assert hi == 1.0 and 0.986 < lo < 0.991
+    lo, hi = clopper_pearson(50, 100)
+    assert 0.39 < lo < 0.41 and 0.59 < hi < 0.61
+    ci = bootstrap_ci([0] * 292)
+    assert ci["k"] == 0 and ci["cp_hi"] > 0 and ci["lo"] == ci["hi"] == 0

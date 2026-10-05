@@ -15,6 +15,11 @@ SCALAR_FIELDS = ["issuer_name", "registration_number", "issue_date", "recipient_
 FIELDS = SCALAR_FIELDS + ["items", "totals"]
 ITEM_KEYS = ["description", "quantity", "unit_price", "amount", "rate"]
 
+# Fields a verification check can in principle catch an error in (registry, name match, tax arithmetic), plus the numeric parts of
+# items (checked by line and per-rate sums). Defined before the fine-tuned model was scored. The rest has no check at all.
+COVERED_FIELDS = ["issuer_name", "registration_number", "tax_included", "grand_total", "totals"]
+UNCOVERED_FIELDS = ["recipient_name", "invoice_number", "issue_date"]
+
 SCHEMA_TEXT = """{
   "issuer_name": str, "registration_number": "T" + 13 digits, "issue_date": "YYYY-MM-DD", "recipient_name": str,
   "invoice_number": str, "tax_included": bool (amounts include tax),
@@ -97,4 +102,10 @@ def score(pred, target):
     ok = {f: a[f] == b[f] for f in FIELDS}
     n_gold = len(b["items"])
     item_hits = sum(1 for i, g_it in enumerate(b["items"]) if i < len(a["items"]) and a["items"][i] == g_it)
-    return {"fields": ok, "exact": all(ok.values()), "items_correct": item_hits, "items_total": n_gold, "parsed": isinstance(pred, dict) and bool(pred)}
+    same_len = len(a["items"]) == n_gold
+    item_numbers = same_len and all(x[1:] == y[1:] for x, y in zip(a["items"], b["items"]))
+    item_text = same_len and all(x[0] == y[0] for x, y in zip(a["items"], b["items"]))
+    covered = all(ok[f] for f in COVERED_FIELDS) and item_numbers
+    uncovered = all(ok[f] for f in UNCOVERED_FIELDS) and item_text
+    return {"fields": ok, "exact": all(ok.values()), "items_correct": item_hits, "items_total": n_gold, "parsed": isinstance(pred, dict) and bool(pred),
+            "covered_exact": covered, "uncovered_exact": uncovered, "item_numbers_ok": item_numbers, "item_text_ok": item_text}

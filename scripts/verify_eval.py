@@ -30,4 +30,6 @@ Path(f"results/verification_{a.system}_{a.split}.json").write_text(json.dumps(re
 print(f"{a.system} / {a.split}: n={res['n']} (clean {res['n_clean']}, with a document issue {res['n_issue']})")
 print(format_levels(res))
 print("wrong extractions, first check that caught them:", res["wrong_extractions_by_first_check"])
-print("issue documents:", res["issue_documents_by_kind_and_check"])
+print("approved but wrong, by field:", res["approved_but_wrong_by_field"])
+print("injected issue caught by the intended check:", {k: (round(v["mean"], 2), v["n"]) for k, v in res["issue_caught_by_intended_check"].items()},
+      "| all:", round(res["issue_caught_by_intended_check_all"]["mean"], 3))

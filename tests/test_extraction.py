@@ -69,3 +69,17 @@ def test_parse_model_json_variants():
 def test_fields_list_is_stable():
     assert FIELDS == ["issuer_name", "registration_number", "issue_date", "recipient_name", "invoice_number", "tax_included", "grand_total", "items", "totals"]
     assert set(normalize_prediction({}).keys()) == set(FIELDS)
+
+
+def test_covered_and_uncovered_error_classes_are_separated():
+    t = gold_to_target(_gold())
+    p = copy.deepcopy(t); p["items"][0]["description"] += "x"            # text typo: uncovered only
+    r = score(p, t)
+    assert not r["exact"] and r["covered_exact"] and not r["uncovered_exact"] and r["item_numbers_ok"] and not r["item_text_ok"]
+    p = copy.deepcopy(t); p["items"][0]["amount"] += 1                  # number error: covered only
+    r = score(p, t)
+    assert not r["covered_exact"] and r["uncovered_exact"] and not r["item_numbers_ok"] and r["item_text_ok"]
+    p = copy.deepcopy(t); p["recipient_name"] = "株式会社別"
+    r = score(p, t)
+    assert r["covered_exact"] and not r["uncovered_exact"]
+    assert score(copy.deepcopy(t), t)["covered_exact"] and score(copy.deepcopy(t), t)["uncovered_exact"]
