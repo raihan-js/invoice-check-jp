@@ -6,6 +6,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | OCR + rules (PaddleOCR) | 600 | 37.8 [33.8, 41.7] | 91.0 | 98.2 | 98.5 | 80.2 | 97.3 | 100.0 | 99.2 | 58.8 | 83.0 |
 | Qwen2.5-VL-3B zero-shot | 600 | 5.3 [3.7, 7.2] | 67.0 | 77.2 | 69.7 | 51.0 | 77.2 | 28.0 | 98.3 | 48.0 | 81.8 |
+| Qwen2.5-VL-3B QLoRA | 600 | 83.0 [79.8, 85.9] (498/600) | 96.7 | 90.0 | 95.7 | 99.8 | 96.0 | 100.0 | 100.0 | 99.0 | 99.8 |
 
 Exact match by layout:
 
@@ -13,6 +14,7 @@ Exact match by layout:
 |---|---|---|
 | OCR + rules (PaddleOCR) | 46.7 [42.0, 51.3] | 11.3 [6.7, 16.7] |
 | Qwen2.5-VL-3B zero-shot | 7.1 [4.9, 9.6] | 0.0 [0.0, 0.0] |
+| Qwen2.5-VL-3B QLoRA | 97.3 [95.4, 98.6] (438/450) | 40.0 [32.1, 48.3] (60/150) |
 
 ## Extraction: Hold-out (unseen templates and issuers)
 
@@ -20,6 +22,7 @@ Exact match by layout:
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | OCR + rules (PaddleOCR) | 200 | 14.0 [9.5, 19.0] | 95.0 | 99.5 | 97.5 | 82.0 | 99.5 | 100.0 | 50.0 | 26.0 | 28.5 |
 | Qwen2.5-VL-3B zero-shot | 200 | 3.5 [1.5, 6.5] | 62.0 | 53.5 | 71.0 | 48.0 | 64.5 | 25.5 | 97.0 | 26.5 | 65.5 |
+| Qwen2.5-VL-3B QLoRA | 200 | 51.5 [44.3, 58.6] (103/200) | 97.0 | 83.0 | 91.0 | 99.5 | 96.5 | 99.0 | 98.0 | 56.0 | 83.0 |
 
 Exact match by layout:
 
@@ -27,6 +30,7 @@ Exact match by layout:
 |---|---|---|
 | OCR + rules (PaddleOCR) | 28.0 [20.0, 37.0] | 0.0 [0.0, 0.0] |
 | Qwen2.5-VL-3B zero-shot | 7.0 [2.0, 12.0] | 0.0 [0.0, 0.0] |
+| Qwen2.5-VL-3B QLoRA | 99.0 [94.6, 100.0] (99/100) | 4.0 [1.1, 9.9] (4/100) |
 
 ## Verification layers: OCR + rules (PaddleOCR), Test (n=600, clean 531, with a document issue 69)
 
@@ -58,6 +62,21 @@ Approved but still wrong, by field: {'recipient_name': 10, 'issue_date': 1, 'inv
 
 Injected issue caught by the intended check: reg_no_check_digit 100% (n=14), reg_no_other_company 50% (n=20), reg_no_revoked 54% (n=13), reg_no_unregistered 70% (n=10), tax_total_wrong 83% (n=12)
 
+## Verification layers: Qwen2.5-VL-3B QLoRA, Test (n=600, clean 531, with a document issue 69)
+
+| layers | automation rate | residual error (all invoices) | residual among approved | of which covered fields | of which uncovered fields | wrong extractions caught | document issues flagged |
+|---|---|---|---|---|---|---|---|
+| none | 100.0 [99.3, 100.0] (531/531) | 17.1 [14.0, 20.6] (91/531) | 17.1 [14.0, 20.6] (91/531) | 12.8 [10.1, 16.0] (68/531) | 8.7 [6.4, 11.4] (46/531) | 0.0 [0.0, 4.0] (0/91) | 0.0 [0.0, 5.2] (0/69) |
+| schema | 99.6 [98.6, 100.0] (529/531) | 16.8 [13.7, 20.2] (89/531) | 16.8 [13.7, 20.3] (89/529) | 12.9 [10.1, 16.0] (68/529) | 8.3 [6.1, 11.0] (44/529) | 2.2 [0.3, 7.7] (2/91) | 0.0 [0.0, 5.2] (0/69) |
+| check_digit | 89.5 [86.5, 91.9] (475/531) | 6.6 [4.6, 9.0] (35/531) | 7.4 [5.2, 10.1] (35/475) | 2.9 [1.6, 4.9] (14/475) | 5.7 [3.8, 8.2] (27/475) | 61.5 [50.8, 71.6] (56/91) | 24.6 [15.1, 36.5] (17/69) |
+| registry | 89.3 [86.3, 91.8] (474/531) | 6.4 [4.5, 8.8] (34/531) | 7.2 [5.0, 9.9] (34/474) | 2.7 [1.5, 4.6] (13/474) | 5.7 [3.8, 8.2] (27/474) | 62.6 [51.9, 72.6] (57/91) | 58.0 [45.5, 69.8] (40/69) |
+| name | 87.8 [84.7, 90.4] (466/531) | 4.9 [3.2, 7.1] (26/531) | 5.6 [3.7, 8.1] (26/466) | 1.1 [0.3, 2.5] (5/466) | 4.7 [3.0, 7.1] (22/466) | 71.4 [61.0, 80.4] (65/91) | 82.6 [71.6, 90.7] (57/69) |
+| tax | 86.8 [83.6, 89.6] (461/531) | 4.0 [2.5, 6.0] (21/531) | 4.6 [2.8, 6.9] (21/461) | 0.0 [0.0, 0.8] (0/461) | 4.6 [2.8, 6.9] (21/461) | 76.9 [66.9, 85.1] (70/91) | 100.0 [94.8, 100.0] (69/69) |
+
+Approved but still wrong, by field: {'invoice_number': 10, 'issue_date': 10, 'items': 1}
+
+Injected issue caught by the intended check: reg_no_check_digit 100% (n=14), reg_no_other_company 85% (n=20), reg_no_revoked 100% (n=13), reg_no_unregistered 100% (n=10), tax_total_wrong 100% (n=12)
+
 ## Verification layers: OCR + rules (PaddleOCR), Hold-out (unseen templates) (n=200, clean 173, with a document issue 27)
 
 | layers | automation rate | residual error (all invoices) | residual among approved | of which covered fields | of which uncovered fields | wrong extractions caught | document issues flagged |
@@ -87,4 +106,19 @@ Injected issue caught by the intended check: reg_no_check_digit 40% (n=5), reg_n
 Approved but still wrong, by field: {'totals': 1, 'recipient_name': 2}
 
 Injected issue caught by the intended check: reg_no_check_digit 100% (n=5), reg_no_other_company 43% (n=7), reg_no_revoked 17% (n=6), reg_no_unregistered 67% (n=3), tax_total_wrong 83% (n=6)
+
+## Verification layers: Qwen2.5-VL-3B QLoRA, Hold-out (unseen templates) (n=200, clean 173, with a document issue 27)
+
+| layers | automation rate | residual error (all invoices) | residual among approved | of which covered fields | of which uncovered fields | wrong extractions caught | document issues flagged |
+|---|---|---|---|---|---|---|---|
+| none | 100.0 [97.9, 100.0] (173/173) | 49.7 [42.0, 57.4] (86/173) | 49.7 [42.0, 57.4] (86/173) | 39.3 [32.0, 47.0] (68/173) | 41.0 [33.6, 48.8] (71/173) | 0.0 [0.0, 4.2] (0/86) | 0.0 [0.0, 12.8] (0/27) |
+| schema | 98.3 [95.0, 99.6] (170/173) | 48.0 [40.3, 55.7] (83/173) | 48.8 [41.1, 56.6] (83/170) | 38.2 [30.9, 46.0] (65/170) | 40.0 [32.6, 47.8] (68/170) | 3.5 [0.7, 9.9] (3/86) | 0.0 [0.0, 12.8] (0/27) |
+| check_digit | 82.7 [76.2, 88.0] (143/173) | 32.4 [25.5, 39.9] (56/173) | 39.2 [31.1, 47.7] (56/143) | 26.6 [19.5, 34.6] (38/143) | 32.2 [24.6, 40.5] (46/143) | 34.9 [24.9, 45.9] (30/86) | 37.0 [19.4, 57.6] (10/27) |
+| registry | 82.1 [75.5, 87.5] (142/173) | 31.8 [24.9, 39.3] (55/173) | 38.7 [30.7, 47.3] (55/142) | 26.1 [19.1, 34.1] (37/142) | 31.7 [24.1, 40.0] (45/142) | 36.0 [26.0, 47.1] (31/86) | 70.4 [49.8, 86.2] (19/27) |
+| name | 80.3 [73.6, 86.0] (139/173) | 30.1 [23.3, 37.5] (52/173) | 37.4 [29.4, 46.0] (52/139) | 24.5 [17.6, 32.5] (34/139) | 30.9 [23.4, 39.3] (43/139) | 39.5 [29.2, 50.7] (34/86) | 88.9 [70.8, 97.6] (24/27) |
+| tax | 60.7 [53.0, 68.0] (105/173) | 10.4 [6.3, 15.9] (18/173) | 17.1 [10.5, 25.7] (18/105) | 0.0 [0.0, 3.5] (0/105) | 17.1 [10.5, 25.7] (18/105) | 79.1 [69.0, 87.1] (68/86) | 100.0 [87.2, 100.0] (27/27) |
+
+Approved but still wrong, by field: {'items': 17, 'issue_date': 3, 'invoice_number': 1}
+
+Injected issue caught by the intended check: reg_no_check_digit 100% (n=5), reg_no_other_company 71% (n=7), reg_no_revoked 100% (n=6), reg_no_unregistered 100% (n=3), tax_total_wrong 100% (n=6)
 
