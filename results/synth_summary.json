@@ -1,0 +1,87 @@
+{
+  "seed": 0,
+  "counts": {
+    "train": 3000,
+    "val": 300,
+    "test": 600,
+    "holdout": 200
+  },
+  "by_template": {
+    "h_classic__k0": 195,
+    "h_classic__k1": 195,
+    "h_classic__k2": 195,
+    "h_classic__k3": 195,
+    "h_classic__k4": 195,
+    "h_banded__k0": 195,
+    "h_banded__k1": 195,
+    "h_banded__k2": 195,
+    "h_banded__k3": 195,
+    "h_banded__k4": 195,
+    "h_compact__k0": 195,
+    "h_compact__k1": 195,
+    "h_compact__k2": 195,
+    "h_compact__k3": 195,
+    "h_compact__k4": 195,
+    "v_header__k0": 195,
+    "v_header__k1": 195,
+    "v_header__k2": 195,
+    "v_header__k3": 195,
+    "v_header__k4": 195,
+    "h_twocol__k5": 50,
+    "h_twocol__k6": 50,
+    "v_columns__k5": 50,
+    "v_columns__k6": 50
+  },
+  "by_issue": {
+    "none": 3611,
+    "tax_total_wrong": 95,
+    "reg_no_other_company": 105,
+    "reg_no_revoked": 80,
+    "reg_no_unregistered": 96,
+    "reg_no_check_digit": 113
+  },
+  "tax_checker_clean_pass": 3611,
+  "tax_checker_clean_total": 3611,
+  "alignment_failures": [],
+  "overflow_failures": [
+    {
+      "id": "inv_001680",
+      "template": "h_classic__k0"
+    },
+    {
+      "id": "inv_001783",
+      "template": "h_classic__k3"
+    },
+    {
+      "id": "inv_001801",
+      "template": "h_classic__k1"
+    },
+    {
+      "id": "inv_002601",
+      "template": "h_classic__k1"
+    },
+    {
+      "id": "inv_003183",
+      "template": "h_classic__k3"
+    },
+    {
+      "id": "inv_003481",
+      "template": "h_classic__k1"
+    },
+    {
+      "id": "inv_003640",
+      "template": "h_classic__k0"
+    },
+    {
+      "id": "inv_003718",
+      "template": "v_header__k3"
+    }
+  ],
+  "seal_overlap": 705,
+  "layout": {
+    "horizontal": 3025,
+    "vertical": 1075
+  },
+  "total": 4100,
+  "elapsed_s": 770
+}

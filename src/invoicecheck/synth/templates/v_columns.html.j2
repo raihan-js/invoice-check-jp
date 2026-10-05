@@ -1,0 +1,6 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">{% include "_css.j2" %}
+<style>.page{writing-mode:vertical-rl;padding:36px 40px;font-size:14px}.col{margin-left:12px}.title{font-size:30px}.issuer{padding-right:0;min-height:0}.seal{right:auto;left:0;top:auto;bottom:0}
+.items td,.items th{padding:8px 4px}.items{width:auto;height:auto}.totalbox{display:block}</style></head><body><div class="page">
+<div class="col"><h1 class="title">{{title}}</h1></div><div class="col">{{blocks.recipient|safe}}</div><div class="col">{{blocks.meta|safe}}</div><div class="col" style="position:relative">{{blocks.issuer|safe}}{{blocks.seal|safe}}</div>
+<div class="col">{{blocks.item_table|safe}}</div><div class="col">{{blocks.summary|safe}}</div><div class="col">{{blocks.total_box|safe}}</div>
+</div></body></html>

@@ -1,0 +1,9 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">{% include "_css.j2" %}
+<style>.band{background:{{skin.accent}};color:#fff;margin:-46px -54px 24px;padding:26px 54px;display:flex;justify-content:space-between;align-items:center}
+.band .title{color:#fff;font-size:28px}.items tbody tr:nth-child(even) td{background:{{skin.head_bg}}}</style></head><body><div class="page">
+<div class="band"><h1 class="title">{{title}}</h1><div style="text-align:right">{{blocks.meta|safe}}</div></div>
+<div class="flex" style="justify-content:space-between;margin-bottom:20px"><div style="width:46%">{{blocks.recipient|safe}}<div style="margin-top:16px">{{blocks.total_box|safe}}</div></div><div style="width:48%;position:relative">{{blocks.issuer|safe}}{{blocks.seal|safe}}</div></div>
+{{blocks.item_table|safe}}
+<div style="width:62%;margin:18px 0 0 auto">{{blocks.summary|safe}}</div>
+<div style="margin-top:16px;width:55%">{{blocks.bank|safe}}</div>
+</div></body></html>

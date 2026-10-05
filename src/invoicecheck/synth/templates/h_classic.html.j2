@@ -1,0 +1,9 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">{% include "_css.j2" %}</head><body><div class="page">
+<h1 class="title" style="text-align:center;font-size:30px;margin-bottom:22px">{{title}}</h1>
+<div class="flex" style="justify-content:space-between;margin-bottom:22px">
+  <div style="width:44%">{{blocks.recipient|safe}}<div style="margin-top:14px">下記のとおりご請求申し上げます。</div><div style="margin-top:12px">{{blocks.total_box|safe}}</div></div>
+  <div style="width:50%">{{blocks.meta|safe}}<div style="margin-top:10px;position:relative">{{blocks.issuer|safe}}{{blocks.seal|safe}}</div></div>
+</div>
+{{blocks.item_table|safe}}
+<div class="flex" style="margin-top:18px;justify-content:space-between;align-items:flex-start"><div style="width:36%">{{blocks.bank|safe}}</div><div style="width:60%;min-width:0">{{blocks.summary|safe}}</div></div>
+</div></body></html>

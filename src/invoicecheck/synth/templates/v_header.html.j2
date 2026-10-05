@@ -1,0 +1,6 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">{% include "_css.j2" %}
+<style>.vhead{writing-mode:vertical-rl;width:305px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;height:100%}
+.vhead .title{font-size:30px}.vhead .issuer{padding-right:0;padding-top:0;min-height:0;height:620px}.vhead .seal{right:auto;left:-10px;top:auto;bottom:-8px}</style></head><body><div class="page" style="display:flex;flex-direction:row-reverse;gap:20px">
+<div class="vhead"><h1 class="title">{{title}}</h1><div>{{blocks.recipient|safe}}</div><div>{{blocks.meta|safe}}</div><div style="position:relative">{{blocks.issuer|safe}}{{blocks.seal|safe}}</div></div>
+<div style="flex:1;min-width:0;padding-top:14px">{{blocks.total_box|safe}}<div style="height:16px"></div>{{blocks.item_table|safe}}<div style="margin-top:16px">{{blocks.summary|safe}}</div></div>
+</div></body></html>
