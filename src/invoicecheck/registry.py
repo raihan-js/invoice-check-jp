@@ -80,7 +80,8 @@ def build_db(csv_paths, db_path, snapshot, downloaded):
 
 class Registry:
     def __init__(self, db_path):
-        self.con = sqlite3.connect(str(db_path))
+        # check_same_thread=False: the API serves requests from a thread pool; the registry is only ever read after construction
+        self.con = sqlite3.connect(str(db_path), check_same_thread=False)
 
     @classmethod
     def from_records(cls, records):

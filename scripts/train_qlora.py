@@ -7,10 +7,12 @@ gradient accumulation, image budget capped at MAX_PIXELS (reported with the resu
 """
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")   # the 3060 is close to its limit on 7-item invoices
 import torch  # noqa: E402
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training  # noqa: E402
 from qwen_vl_utils import process_vision_info  # noqa: E402
@@ -68,8 +70,8 @@ def collate(batch):
 
 
 args = TrainingArguments(output_dir=a.out, per_device_train_batch_size=1, gradient_accumulation_steps=a.grad_accum, num_train_epochs=a.epochs,
-                         learning_rate=a.lr, lr_scheduler_type="cosine", warmup_ratio=0.03, bf16=True, logging_steps=5, save_steps=50,
-                         save_total_limit=3, report_to="none", remove_unused_columns=False, gradient_checkpointing=True, seed=a.seed,
+                         learning_rate=a.lr, lr_scheduler_type="cosine", warmup_steps=0.03, bf16=True, logging_steps=5, save_steps=50,
+                         report_to="none", remove_unused_columns=False, gradient_checkpointing=True, seed=a.seed,
                          gradient_checkpointing_kwargs={"use_reentrant": False}, dataloader_num_workers=2)
 trainer = Trainer(model=model, args=args, train_dataset=DS(), data_collator=collate)
 has_ckpt = any(Path(a.out).glob("checkpoint-*")) if Path(a.out).exists() else False

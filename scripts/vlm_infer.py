@@ -28,6 +28,7 @@ ap.add_argument("--synth", default="data/synth")
 ap.add_argument("--batch-size", type=int, default=8)
 ap.add_argument("--max-new-tokens", type=int, default=900)
 ap.add_argument("--limit", type=int, default=None)
+ap.add_argument("--prompt-version", default="v2")
 a = ap.parse_args()
 
 gold = [json.loads(l) for l in open(f"{a.synth}/gold_{a.split}.jsonl", encoding="utf-8") if l.strip()]
@@ -51,7 +52,7 @@ t0 = time.time()
 with open(out_path, "a", encoding="utf-8") as f:
     for b in range(0, len(todo), a.batch_size):
         chunk = todo[b:b + a.batch_size]
-        msgs = [messages(str(Path(a.synth).resolve() / g["image"])) for g in chunk]
+        msgs = [messages(str(Path(a.synth).resolve() / g["image"]), a.prompt_version) for g in chunk]
         texts = [proc.apply_chat_template(m, tokenize=False, add_generation_prompt=True) for m in msgs]
         images, _ = process_vision_info(msgs)
         inputs = proc(text=texts, images=images, padding=True, return_tensors="pt").to("cuda")
@@ -60,7 +61,7 @@ with open(out_path, "a", encoding="utf-8") as f:
         outs = proc.batch_decode([o[len(i):] for i, o in zip(inputs.input_ids, gen)], skip_special_tokens=True)
         for g, raw in zip(chunk, outs):
             f.write(json.dumps({"id": g["invoice_id"], "raw": raw, "parsed": parse_model_json(raw), "system": a.system,
-                                "batch_size": a.batch_size, "max_pixels": MAX_PIXELS}, ensure_ascii=False) + "\n")
+                                "batch_size": a.batch_size, "max_pixels": MAX_PIXELS, "prompt_version": a.prompt_version}, ensure_ascii=False) + "\n")
         f.flush()
         print(f"{b + len(chunk)}/{len(todo)} {time.time() - t0:.0f}s", flush=True)
 print("done", flush=True)

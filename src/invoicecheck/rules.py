@@ -56,14 +56,17 @@ def _date(lines):
 
 
 def _names(lines):
-    """(issuer, recipient) from company-name occurrences, using 御中 / 口座名義 / the registration-number line as cues."""
+    """(issuer, recipient) from company-name occurrences, using 御中 / 口座名義 as cues. Handles '…御中' merged into one OCR line."""
     recipient, issuer_votes = "", Counter()
-    for i, ln in enumerate(lines):
-        for m in NAME_RE.finditer(ln["t"].replace("(株)", "株式会社")):
+    for ln in lines:
+        text = ln["t"].replace("(株)", "株式会社")
+        for m in NAME_RE.finditer(re.sub(r"(御中|様)", r" \1 ", text)):
             nm = m.group(0)
-            after = ln["t"][m.end():m.end() + 4] + " ".join(l["t"] for l in lines if l is not ln and abs(l["cy"] - ln["cy"]) < 14 and 0 <= l["x0"] - ln["x1"] < 60 or
-                                                              (l["vertical"] and ln["vertical"] and 0 <= l["y0"] - ln["y1"] < 30 and abs(l["cx"] - ln["cx"]) < 14))
-            if "御中" in after or "御中" in ln["t"][m.end():]:
+            s2 = re.sub(r"(御中|様)", r" \1 ", text)
+            neighbours = " ".join(l["t"] for l in lines if l is not ln and (
+                (abs(l["cy"] - ln["cy"]) < 14 and -25 <= l["x0"] - ln["x1"] < 60) or
+                (l["vertical"] and ln["vertical"] and 0 <= l["y0"] - ln["y1"] < 30 and abs(l["cx"] - ln["cx"]) < 14)))
+            if re.match(r"\s*(御中|様)", s2[m.end():]) or neighbours.strip().startswith("御中") or "御中" in neighbours.split(" ")[:1]:
                 recipient = recipient or nm
             elif "口座名義" in ln["t"]:
                 issuer_votes[nm] += 1
@@ -88,24 +91,38 @@ def _totals_and_grand(L):
     for ln in L:
         if ln["vertical"]:
             continue
-        mt = re.match(r"(\d+)\s*%対象", ln["t"])
+        mt = re.match(r"(\d+)\s*%[対对]象", ln["t"])
         if mt:
-            toks = _right_of(ln, L)
-            sub = tax = None
-            for i, t in enumerate(toks):
-                if "消費税" in t["t"]:
-                    nxt = next((x for x in toks[i + 1:] if re.search(r"\d", x["t"])), None)
-                    tax = to_int_yen(nxt["t"]) if nxt else None
-                    break
-                if sub is None and re.search(r"\d", t["t"]):
-                    sub = to_int_yen(t["t"])
-            if sub is not None and tax is not None:
-                totals.append({"rate": int(mt.group(1)), "subtotal": sub, "tax": tax})
+            rest = ln["t"][mt.end():] + " " + " ".join(t["t"] for t in _right_of(ln, L))
+            m2 = re.search(r"([¥￥]?\s*\d[\d,]*)\s*円?\s*消費税\s*([¥￥]?\s*\d[\d,]*)", rest)
+            if m2:
+                totals.append({"rate": int(mt.group(1)), "subtotal": to_int_yen(m2.group(1)), "tax": to_int_yen(m2.group(2))})
         elif "合計金額" in ln["t"] and grand is None:
             toks = [t for t in _right_of(ln, L) if re.search(r"\d", t["t"])]
             if toks:
                 grand = to_int_yen(toks[0]["t"])
     return sorted(totals, key=lambda t: -t["rate"]), grand
+
+
+def _deskew(L):
+    """Remove the page tilt (scan rotation) using the four table-header cells; no-op when they are not all found."""
+    cells = []
+    for name in ("品名", "数量", "単価", "金額"):
+        c = [l for l in L if l["t"] == name and not l["vertical"]]
+        if not c:
+            return L
+        cells.append(c[0] if not cells else min(c, key=lambda l: abs(l["cy"] - cells[0]["cy"])))
+    xs, ys = [c["cx"] for c in cells], [c["cy"] for c in cells]
+    mx, my = sum(xs) / 4, sum(ys) / 4
+    den = sum((x - mx) ** 2 for x in xs)
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den if den else 0.0
+    if abs(b) > 0.08:      # implausible tilt: header cells were mismatched
+        return L
+    out = []
+    for l in L:
+        d = b * (l["cx"] - mx)
+        out.append({**l, "cy": l["cy"] - d, "y0": l["y0"] - d, "y1": l["y1"] - d})
+    return out
 
 
 def _items(L):
@@ -122,7 +139,7 @@ def _items(L):
         cell = min(hdr[name], key=lambda l: abs(l["cy"] - h0["cy"]))
         cols.append(cell)
     y_top = max(c["y1"] for c in cols)
-    stop = min([l["cy"] for l in L if l["cy"] > y_top + 10 and not l["vertical"] and re.match(r"\d+\s*%対象|合計金額|お振込先|※は軽減", l["t"])] or [1e9])
+    stop = min([l["cy"] for l in L if l["cy"] > y_top + 10 and not l["vertical"] and re.match(r"\d+\s*%[対对]象|合計金額|お振込先|※は軽減", l["t"])] or [1e9])
     body = [l for l in L if y_top < l["cy"] < stop and not l["vertical"]]
     centers = [c["cx"] for c in cols]
     rows = []
@@ -145,7 +162,7 @@ def _items(L):
 
 
 def extract(lines):
-    L = _norm(lines)
+    L = _deskew(_norm(lines))
     full = " ".join(l["t"] for l in L)
     issuer, recipient = _names(L)
     m = re.search(r"請求書番号[:：]\s*(\S+)", full)
@@ -153,4 +170,4 @@ def extract(lines):
     totals, grand = _totals_and_grand(L)
     return {"issuer_name": issuer, "registration_number": normalize_registration_number(_registration(L)) or "", "issue_date": _date(L),
             "recipient_name": recipient, "invoice_number": m.group(1) if m else "",
-            "tax_included": "対象（税込）" in norm_full, "grand_total": grand, "items": _items(L), "totals": totals}
+            "tax_included": bool(re.search(r"[対对]象（税込）", norm_full)), "grand_total": grand, "items": _items(L), "totals": totals}
