@@ -1,0 +1,28 @@
+{
+  "registry_size": 2581522,
+  "sample": 300000,
+  "seed": 0,
+  "one_wrong_digit": {
+    "n": 300000,
+    "check_digit": 286874,
+    "lookup": 12246,
+    "other_company": 880,
+    "share_check_digit": 0.95625,
+    "share_lookup": 0.04082,
+    "share_other_company": 0.00293,
+    "survive_check_digit": 13126,
+    "share_of_survivors_on_other_company": 0.067
+  },
+  "adjacent_swap": {
+    "n": 236488,
+    "check_digit": 230895,
+    "lookup": 5034,
+    "other_company": 559,
+    "share_check_digit": 0.97635,
+    "share_lookup": 0.02129,
+    "share_other_company": 0.00236,
+    "survive_check_digit": 5593,
+    "share_of_survivors_on_other_company": 0.0999
+  },
+  "note": "every single-digit substitution that survives the check digit is a 0<->9 swap (mod-9 weighted sum); most land on an unregistered number (caught by lookup) but a minority land on another registered company, far above chance because registered numbers are clustered, and only a name comparison can catch those"
+}

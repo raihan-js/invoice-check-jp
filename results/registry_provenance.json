@@ -1,0 +1,23 @@
+{
+  "source": "https://www.invoice-kohyo.nta.go.jp/download/zenken",
+  "licence": "公共データ利用規約（第1.0版）",
+  "attribution": "出典：国税庁適格請求書発行事業者公表サイト（国税庁）(https://www.invoice-kohyo.nta.go.jp/) を加工して作成",
+  "snapshot": "2026-09-30",
+  "downloaded": "2026-10-05",
+  "scope": "corporations (h_all CSV); individuals and unincorporated associations not loaded",
+  "files": [
+    "h_all_20260930_001.csv",
+    "h_all_20260930_002.csv",
+    "h_all_20260930_003.csv",
+    "h_all_20260930_004.csv",
+    "h_all_20260930_005.csv"
+  ],
+  "rows_read": 2581522,
+  "registrants": 2581522,
+  "by_process": {
+    "01": 2478816,
+    "03": 92537,
+    "04": 10169
+  },
+  "redistribution": "none; local cache only"
+}
