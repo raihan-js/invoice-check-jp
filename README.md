@@ -68,12 +68,13 @@ Full tables: [`results/REPORT.md`](results/REPORT.md). All intervals are bootstr
 - **The registry is synthetic in the evaluation.** On the real registry, a misread digit resolves to another real company 0.29% of the time (measured), and only the name check stands between that and an approval.
 - **Sole proprietors** are not covered: their numbers are not corporate numbers and have no public check-digit rule in this form (registry lookup only, and individuals' data is not loaded).
 - **Tax rounding is ambiguous by design:** a +/-1 yen error can look like another rounding convention, so the arithmetic check cannot always flag it; injected tax errors were chosen so that no convention explains them.
+- **Registry reads are serialised behind a lock** (fixed 2026-10-06): the SQLite connection was shared by the API's thread pool without one, and under 8 concurrent threads it raised `InterfaceError` / `SystemError` and answered `not_found` for registered numbers. The evaluation numbers above came from single-threaded runs and are unaffected; a test now hammers the registry from 8 threads.
 - One model, one training run, one seed; intervals reflect test-set sampling, not training variance.
 
 ## Reproduce
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest          # 69 tests
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest          # 70 tests
 # registry: download the five h_all CSV zips from the NTA download page (corporations, CSV), unzip to data/registry/csv, then
 .venv/bin/python scripts/build_registry_db.py --snapshot 2026-09-30 --downloaded 2026-10-05
 .venv/bin/python scripts/generate_invoices.py --train 3000 --val 300 --test 600 --holdout 200 --seed 0

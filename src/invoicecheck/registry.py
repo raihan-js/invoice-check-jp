@@ -12,6 +12,7 @@ CSV layout (no header, 24 columns, 0-indexed): 1 registration number (T+13 digit
 import csv
 import json
 import sqlite3
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -80,23 +81,29 @@ def build_db(csv_paths, db_path, snapshot, downloaded):
 
 class Registry:
     def __init__(self, db_path):
-        # check_same_thread=False: the API serves requests from a thread pool; the registry is only ever read after construction
+        # check_same_thread=False lets the API's thread pool use the connection, but SQLite connections are NOT safe for concurrent use from several
+        # threads: unserialised, 8 threads gave InterfaceError / SystemError and wrong "not_found" answers for registered numbers (found 2026-10-06).
+        # Every read goes through this lock.
         self.con = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._lock = threading.RLock()
 
     @classmethod
     def from_records(cls, records):
         """In-memory registry from Record objects (tests, synthetic registries)."""
         self = cls(":memory:")
-        self.con.executescript(SCHEMA)
-        self.con.executemany("INSERT OR REPLACE INTO registrants VALUES (?,?,?,?,?,?,?)",
-                             [(r.reg_no, r.name, r.address, r.process, r.registered, r.revoked, r.expired) for r in records])
+        rows = [(r.reg_no, r.name, r.address, r.process, r.registered, r.revoked, r.expired) for r in records]
+        with self._lock:
+            self.con.executescript(SCHEMA)
+            self.con.executemany("INSERT OR REPLACE INTO registrants VALUES (?,?,?,?,?,?,?)", rows)
         return self
 
     def count(self):
-        return self.con.execute("SELECT COUNT(*) FROM registrants").fetchone()[0]
+        with self._lock:
+            return self.con.execute("SELECT COUNT(*) FROM registrants").fetchone()[0]
 
     def lookup(self, reg_no):
-        row = self.con.execute("SELECT * FROM registrants WHERE reg_no = ?", (reg_no,)).fetchone()
+        with self._lock:
+            row = self.con.execute("SELECT * FROM registrants WHERE reg_no = ?", (reg_no,)).fetchone()
         return Record(*row) if row else None
 
     def status(self, reg_no, on_date):
